@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: which node
+      - run: which npm
       # - uses: actions/checkout@v4
       # # cached node
       # - name: Fetch cached node installation
