@@ -10,38 +10,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: which node
-      - run: which npm
-      # - uses: actions/checkout@v4
-      # # cached node
-      # - name: Fetch cached node installation
-      #   id: cached-node
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~/.npm
-      #       /usr/bin/node
-      #     key: "node-installation"
 
-      # # cached node_modules
-      # - name: Fetch cached node_modules
-      #   id: cached-node-modules
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ~/node_modules
-      #     key: "node-installation"
-      # - uses: actions/setup-node@v4
-      #   with:
-      #     node-version: lts/*
-      # - name: Install dependencies
-      #   run: npm ci
-      # - name: Install Playwright Browsers
-      #   run: npx playwright install --with-deps
-      # - name: Run Playwright tests
-      #   run: npx playwright test
-      # - uses: actions/upload-artifact@v4
-      #   if: ${{ !cancelled() }}
-      #   with:
-      #     name: playwright-report
-      #     path: playwright-report/
-      #     retention-days: 1
+      # cached node
+      - name: Fetch cached node setup
+        id: cached-node
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/local/bin/node
+            /usr/local/bin/npm
+          key: "node-installation"
+
+      # cached node_modules
+      - name: Fetch cached node_modules
+        id: cached-node-modules
+        uses: actions/cache@v3
+        with:
+          path: ~/node_modules
+          key: "node-installation"
+
+      # cached playwright browsers
+      - name: Fetch cached playwright browsers
+        id: cached-playwright-browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: "playwright-browsers"
+
+      - if: steps.cached-node.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - if: steps.cached-node-modules.outputs.cache-hit != 'true'
+        name: Install dependencies
+        run: npm ci
+
+      - if: steps.cached-playwright-browsers.outputs.cache-hit != 'true'
+        name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 1
